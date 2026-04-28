@@ -16,7 +16,7 @@ typedef struct
 } Database;
 #pragma pack(pop)
 
-void save(const StudentArena *arena, const char *filepath);
-void load(StudentArena *arena, const char *filepath);
+void db_init_mapping(StudentArena *arena, const char *filepath);
+void db_close_mapping(StudentArena *arena);
 
 #endif

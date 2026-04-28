@@ -1,84 +1,116 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "storage.h"
 
-void save(const StudentArena *arena, const char *filepath)
-{
-    if (!arena || arena->count == 0)
-    {
-        printf("Nothing to save");
-        return;
-    }
+#ifdef _WIN32
+#include <windows.h>
+static HANDLE hFile = INVALID_HANDLE_VALUE;
+static HANDLE hMap = NULL;
+static void *mapped_data = NULL;
+static size_t mapped_size = 0;
+#else
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+static int fd = -1;
+static void *mapped_data = MAP_FAILED;
+static size_t mapped_size = 0;
+#endif
 
-    FILE *file = fopen(filepath, "wb");
-    if (!file)
-    {
-        printf("Can not open file");
-        return;
-    }
-
-    Database db = {
-        .magic = SMC_MAGIC,
-        .version = CURRENT_VERSION,
-        .count = arena->count};
-
-    fwrite(&db, sizeof(Database), 1, file);
-    size_t written = fwrite(arena->students, sizeof(Student), arena->count, file);
-    fclose(file);
-
-    if (written == arena->count)
-    {
-        printf("Dump %zu records into disk success\n", arena->count);
-    }
-    else
-    {
-        printf("Fail to dump\n");
-    }
-}
-
-void load(StudentArena *arena, const char *filepath)
+void db_init_mapping(StudentArena *arena, const char *filepath)
 {
     if (!arena)
         return;
 
-    FILE *file = fopen(filepath, "rb");
-    if (!file)
+    mapped_size = sizeof(Database) + (arena->capacity * sizeof(Student));
+
+#ifdef _WIN32
+    hFile = CreateFileA(filepath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
     {
-        printf("File %s does not exists", filepath);
+        printf("Win32: Can not open file\n");
         return;
     }
 
-    Database db;
-    if (fread(&db, sizeof(Database), 1, file) != 1)
+    hMap = CreateFileMapping(hFile, NULL, PAGE_READWRITE, 0, (DWORD)mapped_size, NULL);
+    if (!hMap)
     {
-        printf("Fail to read db\n");
-        fclose(file);
+        printf("Win32: CreateFileMapping fail\n");
+        CloseHandle(hFile);
         return;
     }
 
-    if (db.magic != SMC_MAGIC)
+    mapped_data = MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, mapped_size);
+    if (!mapped_data)
     {
-        printf("What the heck is this file? Wrong magic number (0x%X)\n", db.magic);
-        fclose(file);
+        printf("Win32: MapViewOfFile fail\n");
+        CloseHandle(hMap);
+        CloseHandle(hFile);
         return;
     }
 
-    if (db.count > arena->capacity)
+#else
+    fd = open(filepath, O_CREAT | O_RDWR, 0666);
+    if (fd == -1)
     {
-        printf("Can not store\n");
-        fclose(file);
+        perror("POSIX: open failed");
         return;
     }
 
-    size_t read_items = fread(arena->students, sizeof(Student), db.count, file);
-    fclose(file);
+    struct stat st;
+    fstat(fd, &st);
+    if (st.st_size < (off_t)mapped_size)
+    {
+        if (ftruncate(fd, mapped_size) == -1)
+        {
+            perror("ftruncate failed");
+            close(fd);
+            return;
+        }
+    }
+#endif
 
-    if (read_items == db.count)
+    Database *db = (Database *)mapped_data;
+    if (db->magic == 0)
     {
-        arena->count = db.count;
-        printf("Load items successfully\n");
+        db->magic = SMC_MAGIC;
+        db->version = CURRENT_VERSION;
+        db->count = 0;
+        printf("Inited empty file successfull\n");
     }
-    else
+    else if (db->magic != SMC_MAGIC)
     {
-        printf("Missing data or file broken");
+        printf("Error: Wrong Magic Number (0x%X)\n", db->magic);
+        return;
     }
+
+    arena->students = (Student *)((char *)mapped_data + sizeof(Database));
+    arena->count = db->count;
+}
+
+void db_close_mapping(StudentArena *arena)
+{
+    if (!mapped_data)
+        return;
+
+    Database *db = (Database *)mapped_data;
+    db->count = arena->count;
+
+#ifdef _WIN32
+    UnmapViewOfFile(mapped_data);
+    CloseHandle(hMap);
+    CloseHandle(hFile);
+    mapped_data = NULL;
+    hMap = NULL;
+    hFile = INVALID_HANDLE_VALUE;
+#else
+    msync(mapped_data, mapped_size, MS_SYNC);
+    munmap(mapped_data, mapped_size);
+    close(fd);
+    mapped_data = MAP_FAILED;
+    fd = -1;
+#endif
+
+    printf("Stop Mapping\n");
 }

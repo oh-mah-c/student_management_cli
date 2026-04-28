@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "student.h"
 #include "storage.h"
 
@@ -10,6 +11,9 @@ int main()
     if (!arena)
         return -1;
 
+    free(arena->students);
+    db_init_mapping(arena, DB_FILE);
+
     int choice;
     int tmp_id;
     char tmp_name[32];
@@ -20,9 +24,7 @@ int main()
         printf("Students Management\n");
         printf("1. Add student\n");
         printf("2. Printout Student\n");
-        printf("3. Save to storage\n");
-        printf("4. Load from storage\n");
-        printf("5. Exit\n");
+        printf("3. Save to storage and exit\n");
 
         if (scanf("%d", &choice) != 1)
             break;
@@ -38,14 +40,13 @@ int main()
             arena_dump(arena);
             break;
         case 3:
-            save(arena, DB_FILE);
-            break;
-        case 4:
-            load(arena, DB_FILE);
-            break;
-        case 5:
+            db_close_mapping(arena);
+
+            arena->students = NULL;
+
             arena_free(arena);
-            printf("Clear");
+            printf("System halted. Data saved");
+
             return 0;
         default:
             printf("What the ?\n");
