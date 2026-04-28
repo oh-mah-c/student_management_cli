@@ -3,12 +3,14 @@
 
 #include <stddef.h>
 
+#pragma pack(push, 1)
 typedef struct
 {
-    int id;
-    char name[32];
-    float gpa;
+    int id;        // 4 bytes
+    char name[32]; // 32 bytes
+    float gpa;     // 4 bytes
 } Student;
+#pragma pack(pop)
 
 typedef struct
 {

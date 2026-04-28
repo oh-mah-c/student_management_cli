@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include "student.h"
+#include "storage.h"
+
+#define DB_FILE "database.msc"
 
 int main()
 {
@@ -17,7 +20,9 @@ int main()
         printf("Students Management\n");
         printf("1. Add student\n");
         printf("2. Printout Student\n");
-        printf("3. Exit");
+        printf("3. Save to storage\n");
+        printf("4. Load from storage\n");
+        printf("5. Exit\n");
 
         if (scanf("%d", &choice) != 1)
             break;
@@ -33,6 +38,12 @@ int main()
             arena_dump(arena);
             break;
         case 3:
+            save(arena, DB_FILE);
+            break;
+        case 4:
+            load(arena, DB_FILE);
+            break;
+        case 5:
             arena_free(arena);
             printf("Clear");
             return 0;

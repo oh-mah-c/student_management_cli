@@ -63,7 +63,7 @@ void arena_free(StudentArena *arena)
         if (arena->students)
         {
             free(arena->students);
-            free(arena);
         }
+        free(arena);
     }
 }
