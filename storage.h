@@ -5,14 +5,17 @@
 #include "student.h"
 
 #define SMC_MAGIC 0x31434D53
-#define CURRENT_VERSION 1
+#define CURRENT_VERSION 2
 
 #pragma pack(push, 1)
 typedef struct
 {
     uint32_t magic;
     uint32_t version;
-    uint32_t count;
+    size_t max_capacity;
+    size_t root_node_idx;
+    size_t next_student_idx;
+    size_t next_node_idx;
 } Database;
 #pragma pack(pop)
 

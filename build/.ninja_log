@@ -1,8 +1,19 @@
 # ninja log v6
-55	799	7990443989551230	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
-107	2681	7990443189067913	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
-99	2641	7990443188982859	CMakeFiles/student_mgmt.dir/main.c.obj	d918abad854432c6
-891	2143	7990444003062396	student_mgmt.exe	c88f71fd2d37d12a
-98	4901	7990878888023672	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
-47	460	7990879248171144	CMakeFiles/student_mgmt.dir/main.c.obj	d918abad854432c6
 461	2428	7990879252301124	student_mgmt.exe	c88f71fd2d37d12a
+47	460	7990879248171144	CMakeFiles/student_mgmt.dir/main.c.obj	d918abad854432c6
+107	2681	7990443189067913	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
+98	4901	7990878888023672	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
+184	3142	7991807823005668	CMakeFiles/student_mgmt.dir/main.c.obj	d918abad854432c6
+203	3175	7991807823215739	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
+216	5355	7991807823345687	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
+5356	7291	7991807874781023	student_mgmt.exe	c88f71fd2d37d12a
+11	1462	7991810375642848	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
+26	5338	7991810376335886	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
+5339	6399	7991810428892003	student_mgmt.exe	c88f71fd2d37d12a
+53	607	7991811408778183	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
+629	1170	7991811414498187	student_mgmt.exe	c88f71fd2d37d12a
+48	448	7991812782085162	CMakeFiles/student_mgmt.dir/main.c.obj	d918abad854432c6
+60	3638	7991812782284937	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
+3639	4163	7991812818024919	student_mgmt.exe	c88f71fd2d37d12a
+65	543	7991813219863397	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
+544	1442	7991813224663386	student_mgmt.exe	c88f71fd2d37d12a

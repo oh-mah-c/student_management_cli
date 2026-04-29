@@ -23,7 +23,7 @@ void db_init_mapping(StudentArena *arena, const char *filepath)
     if (!arena)
         return;
 
-    mapped_size = sizeof(Database) + (arena->capacity * sizeof(Student));
+    mapped_size = sizeof(Database) + (arena->capacity * sizeof(Student)) + (arena->capacity * sizeof(BtreeNode));
 
 #ifdef _WIN32
     hFile = CreateFileA(filepath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -62,13 +62,16 @@ void db_init_mapping(StudentArena *arena, const char *filepath)
     fstat(fd, &st);
     if (st.st_size < (off_t)mapped_size)
     {
-        if (ftruncate(fd, mapped_size) == -1)
-        {
-            perror("ftruncate failed");
-            close(fd);
-            return;
-        }
+        ftruncate(fd, mapped_size);
     }
+
+    mapped_data = mmap(NULL, mapped_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (mapped_data == MAP_FAILED)
+    {
+        close(fd);
+        return;
+    }
+
 #endif
 
     Database *db = (Database *)mapped_data;
@@ -76,8 +79,11 @@ void db_init_mapping(StudentArena *arena, const char *filepath)
     {
         db->magic = SMC_MAGIC;
         db->version = CURRENT_VERSION;
-        db->count = 0;
-        printf("Inited empty file successfull\n");
+        db->max_capacity = arena->capacity;
+        db->root_node_idx = (size_t)-1;
+        db->next_student_idx = 0;
+        db->next_node_idx = 0;
+        printf("BTree Initial successfull\n");
     }
     else if (db->magic != SMC_MAGIC)
     {
@@ -85,32 +91,28 @@ void db_init_mapping(StudentArena *arena, const char *filepath)
         return;
     }
 
+    arena->root_idx = &db->root_node_idx;
+    arena->next_student = &db->next_student_idx;
+    arena->next_node = &db->next_node_idx;
+
     arena->students = (Student *)((char *)mapped_data + sizeof(Database));
-    arena->count = db->count;
+    arena->nodes = (BtreeNode *)((char *)mapped_data + sizeof(Database) + (db->max_capacity * sizeof(Student)));
 }
 
 void db_close_mapping(StudentArena *arena)
 {
+    (void)arena;
+
     if (!mapped_data)
         return;
-
-    Database *db = (Database *)mapped_data;
-    db->count = arena->count;
-
 #ifdef _WIN32
     UnmapViewOfFile(mapped_data);
     CloseHandle(hMap);
     CloseHandle(hFile);
-    mapped_data = NULL;
-    hMap = NULL;
-    hFile = INVALID_HANDLE_VALUE;
 #else
     msync(mapped_data, mapped_size, MS_SYNC);
     munmap(mapped_data, mapped_size);
     close(fd);
-    mapped_data = MAP_FAILED;
-    fd = -1;
 #endif
-
     printf("Stop Mapping\n");
 }
