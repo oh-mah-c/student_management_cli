@@ -212,3 +212,234 @@ void arena_free(StudentArena *arena)
         free(arena);
     }
 }
+
+static int find_key(BtreeNode *node, int k)
+{
+    int idx = 0;
+    while (idx < node->num_keys && node->keys[idx] < k)
+        ++idx;
+    return idx;
+}
+
+static int get_pred(StudentArena *arena, size_t node_idx)
+{
+    BtreeNode *curr = GET_NODE(node_idx);
+    while (!curr->is_leaf)
+    {
+        curr = GET_NODE(curr->children_idx[curr->num_keys]);
+    }
+
+    return curr->keys[curr->num_keys - 1];
+}
+
+static int get_successor(StudentArena *arena, size_t node_idx)
+{
+    BtreeNode *curr = GET_NODE(node_idx);
+    while (!curr->is_leaf)
+    {
+        curr = GET_NODE(curr->children_idx[0]);
+    }
+    return curr->keys[0];
+}
+
+static void merge_nodes(StudentArena *arena, size_t node_idx, int idx)
+{
+    BtreeNode *node = GET_NODE(node_idx);
+    size_t child_idx = node->children_idx[idx];
+    size_t sibling_idx = node->children_idx[idx + 1];
+    BtreeNode *child = GET_NODE(child_idx);
+    BtreeNode *sibling = GET_NODE(sibling_idx);
+
+    child->keys[DEGREE - 1] = node->keys[idx];
+    child->children_idx[DEGREE - 1] = node->student_idx[idx];
+
+    for (int i = 0; i < sibling->num_keys; ++i)
+    {
+        child->keys[i + DEGREE] = sibling->keys[i];
+        child->student_idx[i + DEGREE] = sibling->student_idx[i];
+    }
+
+    if (!child->is_leaf)
+    {
+        for (int i = 0; i <= sibling->num_keys; ++i)
+        {
+            child->children_idx[i + DEGREE] = sibling->children_idx[i];
+        }
+    }
+
+    child->num_keys = sibling->num_keys + 1;
+
+    for (int i = idx + 1; i < node->num_keys; ++i)
+    {
+        node->keys[i - 1] = node->keys[i];
+        node->student_idx[i - 1] = node->student_idx[i];
+    }
+
+    for (int i = idx + 2; i <= node->num_keys; ++i)
+    {
+        node->children_idx[i - 1] = node->children_idx[i];
+    }
+
+    node->num_keys--;
+}
+
+static void fill_node(StudentArena *arena, size_t node_idx, int idx)
+{
+    BtreeNode *node = GET_NODE(node_idx);
+
+    if (idx != 0 && GET_NODE(node->children_idx[idx - 1])->num_keys >= DEGREE)
+    {
+        BtreeNode *child = GET_NODE(node->children_idx[idx]);
+        BtreeNode *sibling = GET_NODE(node->children_idx[idx - 1]);
+
+        for (int i = child->num_keys - 1; i >= 0; --i)
+        {
+            child->keys[i + 1] = child->keys[i];
+            child->student_idx[i + 1] = child->student_idx[idx - 1];
+        }
+
+        if (!child->is_leaf)
+        {
+            for (int i = child->num_keys; i >= 0; --i)
+            {
+                child->children_idx[i + 1] = child->children_idx[i];
+            }
+            child->children_idx[0] = sibling->children_idx[sibling->num_keys];
+        }
+
+        child->keys[0] = node->keys[idx - 1];
+        child->student_idx[0] = node->student_idx[idx - 1];
+        node->keys[idx - 1] = sibling->keys[sibling->num_keys - 1];
+        node->student_idx[idx - 1] = sibling->student_idx[sibling->num_keys - 1];
+        child->num_keys++;
+        sibling->num_keys--;
+    }
+    else if (idx != node->num_keys && GET_NODE(node->children_idx[idx + 1])->num_keys >= DEGREE)
+    {
+        BtreeNode *child = GET_NODE(node->children_idx[idx]);
+        BtreeNode *sibling = GET_NODE(node->children_idx[idx + 1]);
+
+        child->keys[idx] = sibling->keys[0];
+        node->student_idx[idx] = sibling->student_idx[0];
+
+        for (int i = 1; i < sibling->num_keys; ++i)
+        {
+            sibling->keys[i - 1] = sibling->keys[i];
+            sibling->student_idx[i - 1] = sibling->student_idx[i];
+        }
+        if (!sibling->is_leaf)
+        {
+            for (int i = 1; i <= sibling->num_keys; ++i)
+            {
+                sibling->children_idx[i - 1] = sibling->children_idx[i];
+            }
+        }
+
+        child->num_keys++;
+        sibling->num_keys--;
+    }
+    else
+    {
+        if (idx != node->num_keys)
+        {
+            merge_nodes(arena, node_idx, idx);
+        }
+        else
+        {
+            merge_nodes(arena, node_idx, idx - 1);
+        }
+    }
+}
+
+static void btree_delete_internal(StudentArena *arena, size_t node_idx, int k)
+{
+    if (node_idx == (size_t)-1)
+        return;
+    BtreeNode *node = GET_NODE(node_idx);
+    int idx = find_key(node, k);
+
+    if (idx < node->num_keys && node->keys[idx] == k)
+    {
+        if (node->is_leaf)
+        {
+            for (int i = idx + 1; i < node->num_keys; ++i)
+            {
+                node->keys[i - 1] = node->keys[i];
+                node->student_idx[i - 1] = node->student_idx[i];
+            }
+            node->num_keys--;
+        }
+        else
+        {
+            size_t left_child = node->children_idx[idx];
+            size_t right_child = node->children_idx[idx + 1];
+
+            if (GET_NODE(left_child)->num_keys >= DEGREE)
+            {
+                int pred = get_pred(arena, left_child);
+                node->keys[idx] = pred;
+                btree_delete_internal(arena, left_child, pred);
+            }
+            else if (GET_NODE(right_child)->num_keys >= DEGREE)
+            {
+                int succ = get_successor(arena, right_child);
+                node->keys[idx] = succ;
+                btree_delete_internal(arena, right_child, succ);
+            }
+            else
+            {
+                merge_nodes(arena, node_idx, idx);
+                btree_delete_internal(arena, left_child, k);
+            }
+        }
+    }
+    else
+    {
+        if (node->is_leaf)
+        {
+            printf("404: Can not delete ID %d do not existed\n", k);
+            return;
+        }
+
+        int flag = (idx == node->num_keys);
+
+        if (GET_NODE(node->children_idx[idx])->num_keys < DEGREE)
+        {
+            fill_node(arena, node_idx, idx);
+        }
+
+        if (flag && idx > node->num_keys)
+        {
+            btree_delete_internal(arena, node->children_idx[idx - 1], k);
+        }
+        else
+        {
+            btree_delete_internal(arena, node->children_idx[idx], k);
+        }
+    }
+}
+
+void arena_delete_id(StudentArena *arena, int target_id)
+{
+    if (*arena->root_idx == (size_t)-1)
+    {
+        printf("BTree empty\n");
+        return;
+    }
+
+    btree_delete_internal(arena, *arena->root_idx, target_id);
+
+    BtreeNode *root = GET_NODE(*arena->root_idx);
+    if (root->num_keys == 0)
+    {
+        if (root->is_leaf)
+        {
+            *arena->root_idx = (size_t)-1;
+        }
+        else
+        {
+            *arena->root_idx = root->children_idx[0];
+        }
+    }
+    printf("Delete student with ID: %d", target_id);
+}

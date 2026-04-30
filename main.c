@@ -23,7 +23,8 @@ int main()
         printf("1. Add student\n");
         printf("2. Printout Student\n");
         printf("3. Search Student by Id\n");
-        printf("4. Save to storage and exit\n");
+        printf("4. Delete Student by ID: \n");
+        printf("5. Save to storage and exit\n");
 
         if (scanf("%d", &choice) != 1)
         {
@@ -62,6 +63,18 @@ int main()
             }
             break;
         case 4:
+            printf("Type in ID: ");
+            if (scanf("%d", &tmp_id) == 1)
+            {
+                arena_delete_id(arena, tmp_id);
+            }
+            else
+            {
+                while (getchar() != '\n')
+                    ;
+            }
+            break;
+        case 5:
             db_close_mapping(arena);
             arena_free(arena);
             printf("System halted. Data saved");
