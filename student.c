@@ -443,3 +443,52 @@ void arena_delete_id(StudentArena *arena, int target_id)
     }
     printf("Delete student with ID: %d", target_id);
 }
+
+static Student *btree_get_student(StudentArena *arena, size_t node_idx, int target_id)
+{
+    if (node_idx == (size_t)-1)
+        return NULL;
+
+    BtreeNode *node = GET_NODE(node_idx);
+    int i = 0;
+
+    while (i < node->num_keys && target_id > node->keys[i])
+    {
+        i++;
+    }
+
+    if (i < node->num_keys && target_id == node->keys[i])
+    {
+        return &arena->students[node->student_idx[i]];
+    }
+
+    if (node->is_leaf)
+    {
+        return NULL;
+    }
+
+    return btree_get_student(arena, node->student_idx[i], target_id);
+}
+
+void arena_update_student(StudentArena *arena, int target_id, const char *new_name, float new_gpa)
+{
+    if (*arena->root_idx == (size_t)-1)
+    {
+        printf("BTree Empty\n");
+        return;
+    }
+
+    Student *s = btree_get_student(arena, *arena->root_idx, target_id);
+
+    if (s)
+    {
+        strncpy(s->name, new_name, 31);
+        s->name[31] = '\0';
+        s->gpa = new_gpa;
+        printf("Updated successfully [%p] ID: %d | Name: %-15s | GPA: %1.f\n", (void *)s, s->id, s->name, s->gpa);
+    }
+    else
+    {
+        printf("Cannot Update. Can not find ID\n");
+    }
+}

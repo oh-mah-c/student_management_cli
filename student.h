@@ -40,6 +40,7 @@ void arena_add(StudentArena *arena, int id, const char *name, float gpa);
 void arena_dump(const StudentArena *arena);
 void arena_free(StudentArena *arena);
 void arena_search_id(StudentArena *arena, int target_id);
-void arena_delete_id(StudentArena* arena, int target_id);
+void arena_delete_id(StudentArena *arena, int target_id);
+void arena_update_student(StudentArena *arena, int target_id, const char *new_name, float new_gpa);
 
 #endif

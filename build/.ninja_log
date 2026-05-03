@@ -21,3 +21,9 @@
 143	2171	7992621914602548	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
 151	10882	7992621915312551	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
 10883	13514	7992622021987825	student_mgmt.exe	c88f71fd2d37d12a
+69	1365	7993084951505897	CMakeFiles/student_mgmt.dir/main.c.obj	d918abad854432c6
+77	1416	7993084951585926	CMakeFiles/student_mgmt.dir/student.c.obj	533e1cdada6dc516
+86	3210	7993084951815919	CMakeFiles/student_mgmt.dir/storage.c.obj	a7d5fed60d62f179
+3211	4727	7993084982946019	student_mgmt.exe	c88f71fd2d37d12a
+39	359	7993085265288331	CMakeFiles/student_mgmt.dir/main.c.obj	d918abad854432c6
+366	760	7993085268548238	student_mgmt.exe	c88f71fd2d37d12a

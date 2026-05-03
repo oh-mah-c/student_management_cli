@@ -24,7 +24,8 @@ int main()
         printf("2. Printout Student\n");
         printf("3. Search Student by Id\n");
         printf("4. Delete Student by ID: \n");
-        printf("5. Save to storage and exit\n");
+        printf("5. Update student by ID\n");
+        printf("6. Save to storage and exit\n");
 
         if (scanf("%d", &choice) != 1)
         {
@@ -75,6 +76,28 @@ int main()
             }
             break;
         case 5:
+            printf("Type in ID: ");
+            if (scanf("%d", &tmp_id) == 1)
+            {
+                printf("Type in new name and new gpa split by white space");
+                if (scanf("%31s %f", tmp_name, &tmp_gpa) == 2)
+                {
+                    arena_update_student(arena, tmp_id, tmp_name, tmp_gpa);
+                }
+                else
+                {
+                    printf("Input Error\n");
+                    while (getchar() != '\n')
+                        ;
+                }
+            }
+            else
+            {
+                while (getchar() != '\n')
+                    ;
+            }
+            break;
+        case 6:
             db_close_mapping(arena);
             arena_free(arena);
             printf("System halted. Data saved");
